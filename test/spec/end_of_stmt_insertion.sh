@@ -66,3 +66,23 @@ while
         a = Option.some!<Int>(1)
     }
 '
+expect 'ab' '
+    def main () {
+        let a = '"'"'a'"'"'
+        let b = '"'"'b'"'"'
+        print(a.Str(), "")
+        print(b.Str(), "")
+    }
+'
+expect 'a' '
+    print("")
+    '"'"'a'"'"'.Str()
+    print("a", "")
+'
+expect 'false' '
+    def main () {
+        let t = true
+        !t
+        print((!t).Str(), "")
+    }
+'
