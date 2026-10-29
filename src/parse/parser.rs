@@ -574,8 +574,16 @@ impl Parser {
         self.clear_end_statements(&mut res);
         ret_on_err!(res);
         self.bin_op(
+            |this| this.and_expr(),
+            vec![(TokenType::Or, None)],
+            |this| this.and_expr(),
+        )
+    }
+
+    fn and_expr(&mut self) -> ParseResults {
+        self.bin_op(
             |this| this.none_coal_expr(),
-            vec![(TokenType::And, None), (TokenType::Or, None)],
+            vec![(TokenType::And, None)],
             |this| this.none_coal_expr(),
         )
     }
