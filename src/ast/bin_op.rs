@@ -267,7 +267,7 @@ fn do_inline(
 
     // catch x / 0 and x % 0 as compilation errors
     if op.token_type == TokenType::FSlash && push_0_regex.is_match(rhs.trim()) {
-        return Err(type_error("division by zero".to_string()));
+        return Err(type_error("nice try".to_string()));
     }
     if op.token_type == TokenType::Percent && push_0_regex.is_match(rhs.trim()) {
         return Err(type_error("modulo by zero".to_string()));
