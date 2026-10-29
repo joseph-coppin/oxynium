@@ -36,6 +36,10 @@ expect_err 'SyntaxError' 'class class'
 # shellcheck disable=SC2016
 expect_err 'SyntaxError' 'class _$_MyClass'
 expect_err 'TypeError' '
+    class A
+    class A<T>
+'
+expect_err 'TypeError' '
     class S {};
     class S {};
 '

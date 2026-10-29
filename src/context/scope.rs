@@ -144,13 +144,15 @@ impl Context for Scope {
                 );
             }
             if !original.contains(&symbol) {
-                return Err(type_error(format!(
-                    "symbol `{}` redeclared with incompatible type: expected `{}` but found `{}`",
-                    symbol.name,
-                    original.type_.borrow().str(),
-                    symbol.type_.borrow().str()
-                ))
-                .set_interval(trace_interval));
+                return Err(
+                    type_error(format!("type `{}` is already declared", symbol.name))
+                        .set_interval(trace_interval)
+                        .hint(format!(
+                            "`{}` was first declared at {}",
+                            symbol.name,
+                            original.position.0.str()
+                        )),
+                );
             }
         }
         self.declarations
