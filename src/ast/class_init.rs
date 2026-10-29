@@ -25,6 +25,13 @@ impl ClassInitNode {
         for field in self.fields.clone() {
             let field_type_res = field.1.borrow().type_check(ctx.clone())?;
             unknowns += field_type_res.unknowns;
+            if instance_fields_hashmap.contains_key(&field.0) {
+                return Err(type_error(format!(
+                    "field `{}` is initialised more than once",
+                    field.0
+                ))
+                .set_interval(field.1.borrow().pos()));
+            }
             instance_fields_hashmap.insert(field.0, field_type_res.t);
         }
         Ok((instance_fields_hashmap, unknowns))

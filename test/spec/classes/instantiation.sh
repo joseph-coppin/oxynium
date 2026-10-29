@@ -33,6 +33,14 @@ expect_err 'TypeError' '
     new S { x: 1, y: 2 };
 '
 expect_err 'TypeError' '
+    class S { x: Int, y: Int };
+    new S { x: 1, y: 2, x: 3 };
+'
+expect_err 'TypeError' '
+    class S { x: Int, y: Int };
+    new S { x: 1, x: 3 };
+'
+expect_err 'TypeError' '
     class S { x: Int, y: Str };
     new S { x: 1, y: 2 };
 '
