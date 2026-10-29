@@ -1482,6 +1482,8 @@ impl Parser {
             counter_var_assignment_node: mut_rc(PassNode {
                 position: (start.clone(), self.last_tok().unwrap().end.clone()),
             }),
+            index_tok: None,
+            index_var_assignment_node: None,
         }));
         res
     }

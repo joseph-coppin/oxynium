@@ -138,6 +138,7 @@ impl AstNode for ForRangeLoopNode {
         let negative_step_lbl = ctx.borrow_mut().get_anon_label();
         let body_lbl = ctx.borrow_mut().get_anon_label();
         let post_body_lbl = ctx.borrow_mut().get_anon_label();
+        let exhausted_lbl = ctx.borrow_mut().get_anon_label();
         let post_loop_lbl = ctx.borrow_mut().get_anon_label();
 
         let value_dec_asm = self.value_decl_node.borrow_mut().asm(ctx.clone())?;
@@ -182,11 +183,11 @@ impl AstNode for ForRangeLoopNode {
                     cmp {get_step_asm}, 0
                     jl {negative_step_lbl}
                     cmp rax, {get_end_asm}
-                    jge {post_loop_lbl}
+                    jge {exhausted_lbl}
                     jmp {body_lbl}
                 {negative_step_lbl}:
                     cmp rax, {get_end_asm}
-                    jle {post_loop_lbl}
+                    jle {exhausted_lbl}
                 {body_lbl}:
                     {body}
                 {post_body_lbl}:
@@ -195,6 +196,13 @@ impl AstNode for ForRangeLoopNode {
                     mov {get_value_asm}, rax
                     {}
                     jmp {pre_body_lbl}
+                {exhausted_lbl}:
+                    ; leave the loop variables holding their values
+                    ; from the last iteration, rather than one step past
+                    mov rax, {get_value_asm}
+                    sub rax, {get_step_asm}
+                    mov {get_value_asm}, rax
+                    {}
                 {post_loop_lbl}:
             ",
             if let Some(counter_tok) = &self.counter_tok {
@@ -203,6 +211,15 @@ impl AstNode for ForRangeLoopNode {
                     .get_dec_from_id(&counter_tok.literal.as_ref().unwrap().clone())
                     .id;
                 format!("inc {get_counter_asm}")
+            } else {
+                "".to_string()
+            },
+            if let Some(counter_tok) = &self.counter_tok {
+                let get_counter_asm = ctx
+                    .borrow()
+                    .get_dec_from_id(&counter_tok.literal.as_ref().unwrap().clone())
+                    .id;
+                format!("dec {get_counter_asm}")
             } else {
                 "".to_string()
             },
