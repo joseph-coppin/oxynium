@@ -66,6 +66,13 @@ expect_err 'TypeError' '1 || Str'
 expect_err 'TypeError' 'true || Str'
 expect_err 'TypeError' 'false || new Void'
 
+describe '&& binds tighter than ||'
+
+expect_expr_bool 'true' 'true || false && false'
+expect_expr_bool 'true' 'false && false || true'
+expect_expr_bool 'false' 'true && false || false && true'
+expect_expr_bool 'true' 'false || true && true'
+
 
 describe 'Boolean Not'
 
