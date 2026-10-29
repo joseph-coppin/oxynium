@@ -78,3 +78,20 @@ expect_expr_bool 'true' '!(true && false)'
 expect_expr_bool 'true' '!(false && true)'
 expect_err 'TypeError' '!1'
 expect_err 'TypeError' '!""'
+
+describe 'def Bool.=='
+
+expect_expr_bool 'true' 'true == true'
+expect_expr_bool 'true' 'false == false'
+expect_expr_bool 'false' 'true == false'
+expect_expr_bool 'false' 'false == true'
+expect_expr_bool 'true' '(1 < 2) == true'
+expect_expr_bool 'true' '#unchecked_cast(Bool, 2) == true'
+
+
+describe 'def Bool.!='
+
+expect_expr_bool 'false' 'true != true'
+expect_expr_bool 'false' 'false != false'
+expect_expr_bool 'true' 'true != false'
+expect_expr_bool 'true' 'false != true'

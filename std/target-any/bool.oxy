@@ -15,6 +15,25 @@ primitive Bool {
 		"
 	}
 
+	def == (self, other: Bool) Bool {
+		// compare truthiness, as a Bool may hold any non-zero value
+		return #asm Bool "
+			xor rcx, rcx
+			xor rdx, rdx
+			cmp qword [rbp + 16], 0
+			setne cl
+			cmp qword [rbp + 24], 0
+			setne dl
+			xor rax, rax
+			cmp rcx, rdx
+			sete al
+			push rax
+		"
+	}
+
+	def != (self, other: Bool) Bool ->
+		!(self == other),
+
 	def Str (self) Str {
 		if self -> return "true"
 		return "false"
