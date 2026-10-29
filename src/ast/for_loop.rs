@@ -8,7 +8,7 @@ use crate::ast::statements::StatementsNode;
 use crate::ast::symbol_access::SymbolAccessNode;
 use crate::ast::{AstNode, TypeCheckRes};
 use crate::context::Context;
-use crate::error::Error;
+use crate::error::{type_error, Error};
 use crate::parse::token::{Token, TokenType};
 use crate::position::{Interval, Position};
 use crate::util::{mut_rc, MutRc};
@@ -82,6 +82,24 @@ impl AstNode for ForLoopNode {
     }
 
     fn type_check(&self, ctx: MutRc<dyn Context>) -> Result<TypeCheckRes, Error> {
+        if ctx.borrow().throw_on_unknowns() {
+            let iterable_type = self.value.borrow().type_check(ctx.clone())?.t;
+            let is_iterable = match iterable_type.borrow().as_class() {
+                Some(class) => {
+                    class.method_type("len").is_some() && class.method_type("at_raw").is_some()
+                }
+                None => false,
+            };
+            if !is_iterable {
+                return Err(type_error(format!(
+                    "cannot iterate over value of type `{}`",
+                    iterable_type.borrow().str()
+                ))
+                .set_interval(self.value.borrow().pos())
+                .hint("for loops require a value with `len` and `at_raw` methods".to_string()));
+            }
+        }
+
         let TypeCheckRes { mut unknowns, .. } = self
             .counter_var_assignment_node
             .borrow_mut()
