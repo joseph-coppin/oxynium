@@ -179,8 +179,9 @@ expect '012234' '
         }
     }
 '
-expect '' '
+expect '5432' '
     def main () {
+        // empty, as start > end
         for i in range(5, 1) {
             print(i.Str())
         }

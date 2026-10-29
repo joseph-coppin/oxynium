@@ -135,6 +135,8 @@ impl AstNode for ForRangeLoopNode {
 
     fn asm(&mut self, ctx: MutRc<dyn Context>) -> Result<String, Error> {
         let pre_body_lbl = ctx.borrow_mut().get_anon_label();
+        let negative_step_lbl = ctx.borrow_mut().get_anon_label();
+        let body_lbl = ctx.borrow_mut().get_anon_label();
         let post_body_lbl = ctx.borrow_mut().get_anon_label();
         let post_loop_lbl = ctx.borrow_mut().get_anon_label();
 
@@ -177,8 +179,15 @@ impl AstNode for ForRangeLoopNode {
                 {step_dec_asm}
                 {pre_body_lbl}:
                     mov rax, {get_value_asm}
+                    cmp {get_step_asm}, 0
+                    jl {negative_step_lbl}
                     cmp rax, {get_end_asm}
                     jge {post_loop_lbl}
+                    jmp {body_lbl}
+                {negative_step_lbl}:
+                    cmp rax, {get_end_asm}
+                    jle {post_loop_lbl}
+                {body_lbl}:
                     {body}
                 {post_body_lbl}:
                     mov rax, {get_value_asm}
