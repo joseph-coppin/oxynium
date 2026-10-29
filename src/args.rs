@@ -44,7 +44,7 @@ pub fn get_args_cmd() -> Command {
     Command::new("oxy").args(&[
         arg!(-o --out             [FILE]   "File name of output"),
         arg!(-t --target          [TARGET] "Specify compilation target"),
-        arg!(-e --eval            [EXPR]   "Compiles and prints a single expression"),
+        arg!(-e --eval            [SOURCE] "Compile a program passed as a string instead of a file"),
         arg!(-k --keep                     "Keep output assembly and object files"),
         arg!(-O --optimise        [INT]    "Optimisation level"),
         arg!(-E --enable          [ID]...  "Enable specific optimisations"),
