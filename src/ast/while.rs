@@ -45,9 +45,14 @@ impl AstNode for WhileLoopNode {
         if let Some(post_body) = &self.post_body {
             unknowns += post_body.borrow_mut().type_check(ctx.clone())?.unknowns;
         }
-        let mut statements_tr = self.body.borrow_mut().type_check(ctx.clone())?;
+        ctx.borrow_mut().loop_breaks_push();
+        let body_tr = self.body.borrow_mut().type_check(ctx.clone());
+        let has_break = ctx.borrow_mut().loop_breaks_pop();
+        let mut statements_tr = body_tr?;
         statements_tr.unknowns += unknowns;
-        statements_tr.always_returns = statements_tr.always_returns && self.condition.is_none();
+        // a loop without a condition can only be left by `break`
+        // (or `return`), so it only falls through when it has a `break`
+        statements_tr.always_returns = self.condition.is_none() && !has_break;
         Ok(statements_tr)
     }
 

@@ -65,6 +65,12 @@ pub trait Context: Debug {
     fn loop_labels_pop(&mut self) -> Option<LoopLabels>;
     fn loop_label_peak(&self) -> Option<LoopLabels>;
 
+    // used while type checking to find out whether a loop
+    // can be exited with `break`
+    fn loop_breaks_push(&mut self);
+    fn loop_breaks_pop(&mut self) -> bool;
+    fn loop_breaks_mark(&mut self);
+
     fn stack_frame_push(&mut self, frame: CallStackFrame);
     fn stack_frame_pop(&mut self) -> Option<CallStackFrame>;
     fn stack_frame_peak(&self) -> Option<CallStackFrame>;

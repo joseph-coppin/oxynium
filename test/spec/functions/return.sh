@@ -249,6 +249,44 @@ expect_err 'TypeError' '
         }
     }
 '
+expect_err 'TypeError' '
+    def f() Int {}
+'
+expect_err 'TypeError' '
+    def f() Int {
+        while { break }
+    }
+'
+expect_err 'TypeError' '
+    def f(a: Bool) Int {
+        while {
+            if a -> break
+            return 1
+        }
+    }
+'
+expect '4' '
+    def f() Int {
+        let mut i = 0
+        while {
+            i += 1
+            if i > 3 -> return i
+        }
+    }
+    print(f().Str())
+'
+expect '2' '
+    def f(a: Bool) Int {
+        while {
+            for i in range(3) {
+                if i == 1 -> break
+            }
+            while { break }
+            if a -> return 2
+        }
+    }
+    print(f(true).Str())
+'
 
 
 describe 'Unreachable code throws error'

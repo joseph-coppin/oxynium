@@ -294,6 +294,18 @@ impl Context for Scope {
         self.parent.borrow().loop_label_peak()
     }
 
+    fn loop_breaks_push(&mut self) {
+        self.parent.borrow_mut().loop_breaks_push()
+    }
+
+    fn loop_breaks_pop(&mut self) -> bool {
+        self.parent.borrow_mut().loop_breaks_pop()
+    }
+
+    fn loop_breaks_mark(&mut self) {
+        self.parent.borrow_mut().loop_breaks_mark()
+    }
+
     // Stack Frames
 
     fn stack_frame_push(&mut self, frame: CallStackFrame) {
