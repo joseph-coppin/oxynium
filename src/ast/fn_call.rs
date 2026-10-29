@@ -160,6 +160,21 @@ impl FnCallNode {
             .borrow_mut()
             .get_dec_from_id(&self.identifier.clone().literal.unwrap());
 
+        // declared with `def f()` but no body and not `extern`,
+        // so there will be nothing to link against
+        if fn_dec.is_func
+            && fn_dec.require_init
+            && !fn_dec.is_defined
+            && ctx.borrow().throw_on_unknowns()
+        {
+            return Err(type_error(format!(
+                "cannot call function '{}' as it has no body",
+                self.identifier.clone().literal.unwrap()
+            ))
+            .set_interval(self.identifier.interval())
+            .hint("give it a body, or use `extern def` if it is implemented externally".to_string()));
+        }
+
         let fn_type_option = fn_dec.type_.clone();
         if fn_type_option.borrow().is_unknown() {
             return Ok(unknown_callee_type);

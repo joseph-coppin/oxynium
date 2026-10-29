@@ -25,6 +25,14 @@ expect '' '
 expect '' 'fn () {}'
 
 expect_err 'TypeError' 'def a (a) Str {}'
+expect_err 'TypeError' '
+    def f (a: Int) Int
+    print(f(1).Str())
+'
+expect_err 'TypeError' '
+    def main () { g() }
+    def g ()
+'
 expect_err 'TypeError' 'def a (a) {}'
 expect_err 'SyntaxError' 'def 0 () {}'
 expect_err 'SyntaxError' 'def f (,) {}'
