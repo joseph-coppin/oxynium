@@ -92,6 +92,8 @@ expect '10020' '
 '
 expect_err 'TypeError' '1 / 0'
 expect_err 'TypeError' '0 / 0'
+expect_err 'TypeError' '1 % 0'
+expect_err 'TypeError' '0 % 0'
 
 
 describe 'Extreme Int Values'
