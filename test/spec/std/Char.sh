@@ -37,21 +37,23 @@ expect 'true,true,true,false,false,false,false' "
 
 describe 'def Char.=='
 
-expect 'true,false,true,true' $'
+expect 'true,false,true,false,false' $'
     print((\'a\' == \'a\').Str(), ",")
     print((\'a\' == \'b\').Str(), ",")
     print((\'💖\' == \'💖\').Str(), ",")
-    print(("🇨🇦".at_raw(0) == "🇦".at_raw(0)).Str())
+    print(("🇨🇦".at_raw(0) == "🇦".at_raw(0)).Str(), ",")
+    print((\'é\' == \'x\').Str())
 '
 
 
 describe 'def Char.!='
 
-expect 'false,true,false,false' $'
+expect 'false,true,false,true,true' $'
     print((\'a\' != \'a\').Str(), ",")
     print((\'a\' != \'b\').Str(), ",")
     print((\'💖\' != \'💖\').Str(), ",")
-    print(("🇨🇦".at_raw(0) != "🇦".at_raw(0)).Str())
+    print(("🇨🇦".at_raw(0) != "🇦".at_raw(0)).Str(), ",")
+    print((\'é\' != \'x\').Str())
 '
 
 
@@ -62,4 +64,27 @@ expect_expr_int 'a' 'Char.from_int(97)'
 expect_expr_int 'A' 'Char.from_int(65)'
 expect_expr_int '0' 'Char.from_int(48)'
 expect_expr_int ' ' 'Char.from_int(32)'
-# TODO: characters above 0x7F (127) is undefined behaviour
+expect_expr_int 'é' 'Char.from_int(233)'
+expect_expr_int '€' 'Char.from_int(8364)'
+expect_expr_int '💖' 'Char.from_int(128150)'
+expect_expr_bool 'true' $'Char.from_int(233) == \'é\''
+expect_expr_bool 'true' $'Char.from_int(128150) == \'💖\''
+
+
+describe 'def Char.Int'
+
+expect_expr_int '0' 'new Char.Int()'
+expect_expr_int '97' $'\'a\'.Int()'
+expect_expr_int '233' $'\'é\'.Int()'
+expect_expr_int '8364' $'\'€\'.Int()'
+expect_expr_int '128150' $'\'💖\'.Int()'
+# round trips at the boundaries between UTF-8 lengths
+expect '127,128,2047,2048,65535,65536,1114111' '
+    print(Char.from_int(127).Int().Str(), ",")
+    print(Char.from_int(128).Int().Str(), ",")
+    print(Char.from_int(2047).Int().Str(), ",")
+    print(Char.from_int(2048).Int().Str(), ",")
+    print(Char.from_int(65535).Int().Str(), ",")
+    print(Char.from_int(65536).Int().Str(), ",")
+    print(Char.from_int(1114111).Int().Str())
+'
