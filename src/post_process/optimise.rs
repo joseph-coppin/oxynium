@@ -199,7 +199,7 @@ fn redundant_push(ast: Vec<String>) -> Vec<String> {
 fn redundant_mov(ast: Vec<String>) -> Vec<String> {
     let mut res = Vec::new();
 
-    let re = Regex::new(r"mov (.+), ?(.+)").unwrap();
+    let re = Regex::new(r"^mov (.+), ?(.+)$").unwrap();
 
     let mut i: i64 = -1;
     loop {
@@ -209,22 +209,18 @@ fn redundant_mov(ast: Vec<String>) -> Vec<String> {
         }
         let line = ast[i as usize].clone();
 
-        if !line.starts_with("mov") {
-            res.push(line);
-            continue;
-        }
-
-        re.captures(&line).map(|captures| {
+        // only plain `mov`, not `movzx` etc.
+        if let Some(captures) = re.captures(&line) {
             let first = captures.get(1).unwrap().as_str();
             let second = captures.get(2).unwrap().as_str();
 
             if first == second {
                 // remove mov
-                return;
+                continue;
             }
+        }
 
-            res.push(line.clone());
-        });
+        res.push(line);
     }
 
     res
