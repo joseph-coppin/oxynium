@@ -13,6 +13,18 @@ expect 'hi' '
     }
     print(asm("hi"))
 '
+expect '255' '
+    // instructions starting with `mov` other than `mov` itself
+    // must survive optimisation
+    def f() Int {
+        return #asm Int "
+            mov rdx, 0x1FF
+            movzx rax, dl
+            push rax
+        "
+    }
+    print(f().Str())
+'
 
 expect_err 'SyntaxError' '#asm 1'
 expect_err 'SyntaxError' '#asm(1)'
