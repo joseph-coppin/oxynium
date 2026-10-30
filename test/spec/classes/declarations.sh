@@ -46,6 +46,9 @@ expect_err 'TypeError' '
 expect_err 'TypeError' '
     class Bool {};
 '
+expect_err 'TypeError' '
+    class Box<T> { value: T }
+'
 expect_err 'UnknownSymbol' '
     def main () {
         class C

@@ -10,6 +10,9 @@ use std::collections::HashMap;
 use std::fmt::{Debug, Formatter};
 use std::path::Path;
 
+/// std file whose classes only exist to reserve their names
+const RESERVED_NAMES_FILE: &str = "reserved.oxy";
+
 pub struct Scope {
     self_: Option<MutRc<dyn Context>>,
     parent: MutRc<dyn Context>,
@@ -144,6 +147,18 @@ impl Context for Scope {
                 );
             }
             if !original.contains(&symbol) {
+                if original.position.0.file == RESERVED_NAMES_FILE {
+                    return Err(type_error(format!(
+                        "`{}` is a reserved name and cannot be declared",
+                        symbol.name
+                    ))
+                    .set_interval(trace_interval)
+                    .hint(
+                        "this name is reserved for future use by the standard library, \
+                         try a different name"
+                            .to_string(),
+                    ));
+                }
                 return Err(
                     type_error(format!("type `{}` is already declared", symbol.name))
                         .set_interval(trace_interval)
