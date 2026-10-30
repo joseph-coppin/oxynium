@@ -175,6 +175,31 @@ function expect() {
     fi
 }
 
+# compares the exact bytes written to stdout,
+# as `expect` strips null bytes and newlines
+function expect_stdout_hex() {
+    if [ "$filter" != "" ] && [[ "$current_spec_name" != *"$filter"* ]]; then
+        return
+    fi
+    expected="$1"
+    code="$2"
+
+    tests=$((tests+1))
+    current_spec_num_tests=$((current_spec_num_tests+1))
+
+    echo "$code" > in.oxy
+    errors=$(./target/release/oxynium -o=test-out in.oxy 2>&1 > /dev/null)
+    if [ "$errors" != "" ]; then
+        output="$errors"
+    else
+        output=$(./test-out | od -An -tx1 | tr -d ' \n')
+    fi
+
+    if [ "$output" != "$expected" ]; then
+        test_failed "$code" "$expected" "$output"
+    fi
+}
+
 function expect_err() {
     if [ "$#" -lt 2 ]; then
         echo "expect_err expects 2 arguments, got $#"

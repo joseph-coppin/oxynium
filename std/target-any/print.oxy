@@ -1,10 +1,45 @@
 def print (msg="", line_end="\n") {
 	let len = msg.len() * 8
+	// Str stores each character in 8 bytes, padded with zeros,
+	// so copy only the non-zero (UTF-8) bytes into a buffer
+	// on the stack and write that out, a buffer-full at a time
 	#asm Void "
-	    mov rsi, qword [rbp + 16]
-        mov rdx, qword [rbp - 8] ; string length
-		mov rdi, 1
-		call _Syscall.out
+		mov r15, qword [rbp + 16] ; r15 = read pointer
+		mov r14, qword [rbp - 8]
+		add r14, r15              ; r14 = end of string
+		sub rsp, 4096
+		mov r13, rsp              ; r13 = buffer
+		xor r12, r12              ; r12 = bytes in buffer
+
+		._$_print_loop:
+			cmp r15, r14
+			jge ._$_print_flush
+			mov al, byte [r15]
+			inc r15
+			cmp al, 0
+			je ._$_print_loop
+			mov byte [r13 + r12], al
+			inc r12
+			cmp r12, 4096
+			jl ._$_print_loop
+
+			mov rdi, 1
+			mov rsi, r13
+			mov rdx, r12
+			call _Syscall.out
+			xor r12, r12
+			jmp ._$_print_loop
+
+		._$_print_flush:
+			cmp r12, 0
+			je ._$_print_end
+			mov rdi, 1
+			mov rsi, r13
+			mov rdx, r12
+			call _Syscall.out
+
+		._$_print_end:
+			add rsp, 4096
 	"
 
 	if !#unchecked_cast(Bool, line_end) {
