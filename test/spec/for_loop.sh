@@ -43,11 +43,31 @@ expect '0a 1b 2c ' '
         }
     }
 '
-expect '3c' '
+expect '2c' '
     def main () {
         for c, i in "abc" {}
-        // variables still exist after loop
+        // variables still exist after loop,
+        // holding the values from the last iteration
         print(i.Str() + c.Str());
+    }
+'
+expect '2,15/1,1/2,4/4,18' '
+    def main () {
+        for x in range(3) {}
+        print(x.Str(), ",");
+        for y, j in range(10, 20, 5) {}
+        print(y.Str() + "/" + j.Str(), ",");
+        for z, k in range(5, 0, -2) {}
+        print(z.Str() + "/" + k.Str(), ",");
+        for w, n in range(10) {
+            if w == 4 -> break
+        }
+        print(w.Str() + "/" + n.Str(), ",");
+        let l = List.empty!<Int>();
+        l.push(7);
+        l.push(8);
+        for e, f in l {}
+        print(f.Str() + e.Str());
     }
 '
 expect '0true,1false,' '

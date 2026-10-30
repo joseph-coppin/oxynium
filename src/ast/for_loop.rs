@@ -23,20 +23,39 @@ pub struct ForLoopNode {
     pub position: Interval,
     pub counter_var_assignment_node: MutRc<dyn AstNode>,
     pub local_var_assignment_node: MutRc<dyn AstNode>,
+    // the user's index variable, if given, which is assigned from the
+    // hidden counter each iteration so that it isn't incremented past
+    // the last index after the loop
+    pub index_tok: Option<Token>,
+    pub index_var_assignment_node: Option<MutRc<dyn AstNode>>,
 }
 
 impl AstNode for ForLoopNode {
     fn setup(&mut self, ctx: MutRc<dyn Context>) -> Result<(), Error> {
-        if self.counter_tok.literal.is_none() {
-            self.counter_tok = Token::new(
-                TokenType::Identifier,
-                Some(format!(
-                    "_$__{}__counter",
-                    self.id_tok.literal.as_ref().unwrap()
-                )),
-                self.counter_tok.start.clone(),
-                self.counter_tok.end.clone(),
-            );
+        if self.counter_tok.literal.is_some() {
+            self.index_tok = Some(self.counter_tok.clone());
+        }
+        self.counter_tok = Token::new(
+            TokenType::Identifier,
+            Some(format!(
+                "_$__{}__counter",
+                self.id_tok.literal.as_ref().unwrap()
+            )),
+            self.counter_tok.start.clone(),
+            self.counter_tok.end.clone(),
+        );
+
+        if let Some(index_tok) = self.index_tok.clone() {
+            self.index_var_assignment_node = Some(mut_rc(LocalVarNode {
+                identifier: index_tok.clone(),
+                value: mut_rc(SymbolAccessNode {
+                    identifier: self.counter_tok.clone(),
+                }),
+                mutable: false,
+                type_annotation: None,
+                start: index_tok.start.clone(),
+                allow_anon_identifier: false,
+            }));
         }
 
         self.counter_var_assignment_node = mut_rc(LocalVarNode {
@@ -78,6 +97,9 @@ impl AstNode for ForLoopNode {
         self.counter_var_assignment_node
             .borrow_mut()
             .setup(ctx.clone())?;
+        if let Some(ref index_node) = self.index_var_assignment_node {
+            index_node.borrow_mut().setup(ctx.clone())?;
+        }
         self.statements.borrow_mut().setup(ctx.clone())
     }
 
@@ -86,6 +108,10 @@ impl AstNode for ForLoopNode {
             .counter_var_assignment_node
             .borrow_mut()
             .type_check(ctx.clone())?;
+
+        if let Some(ref index_node) = self.index_var_assignment_node {
+            unknowns += index_node.borrow_mut().type_check(ctx.clone())?.unknowns;
+        }
 
         unknowns += self
             .local_var_assignment_node
@@ -122,11 +148,16 @@ impl AstNode for ForLoopNode {
             })),
 
             body: mut_rc(StatementsNode {
-                statements: vec![
-                    // let arg = args.at_raw(i)
-                    self.local_var_assignment_node.clone(),
-                    self.statements.clone(),
-                ],
+                statements: self
+                    .index_var_assignment_node
+                    .clone()
+                    .into_iter()
+                    .chain(vec![
+                        // let arg = args.at_raw(i)
+                        self.local_var_assignment_node.clone(),
+                        self.statements.clone(),
+                    ])
+                    .collect(),
             }),
 
             // i = i + 1
