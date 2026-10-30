@@ -47,3 +47,33 @@ expect_err 'SyntaxError' 'Range { 1 }'
 expect_err 'UnknownSymbol' 'Range(1)'
 expect_err 'UnknownSymbol' 'Range(1, 2)'
 expect_err 'UnknownSymbol' 'Range()'
+
+describe 'def Range.len'
+
+expect '5,3,4,5,0,0,0,5,4,0,0,0,3,1' '
+def main() {
+    print(range(5).len().Str(), ",")
+    print(range(2, 8, 2).len().Str(), ",")
+    print(range(0, 10, 3).len().Str(), ",")
+    print(range(0, 9, 2).len().Str(), ",")
+    print(range(5, 3).len().Str(), ",")
+    print(range(3, 2).len().Str(), ",")
+    print(range(3, 3).len().Str(), ",")
+    print(range(5, 0, -1).len().Str(), ",")
+    print(range(10, 0, -3).len().Str(), ",")
+    print(range(0, 5, -1).len().Str(), ",")
+    print(range(0).len().Str(), ",")
+    print(range(-3).len().Str(), ",")
+    print(range(-5, -2).len().Str(), ",")
+    print(range(3, 5, 6).len().Str())
+}
+'
+expect '0 3 6 9 ,10 7 4 1 ,' '
+def main() {
+    for i in range(0, 10, 3) { print(i.Str(), " ") }
+    print(",", "")
+    for j in range(10, 0, -3) { print(j.Str(), " ") }
+    print(",", "")
+    for k in range(5, 3) { print(k.Str(), " ") }
+}
+'

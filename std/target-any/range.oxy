@@ -19,9 +19,14 @@ class Range {
 	def len(self) Int {
 		if self.step == 0 ->
 			panic("Range.step cannot be 0")
-		let len = (self.end - self.start) / self.step
-		if len < 1 && self.end > 0 -> return 1
-		return len
+		let distance = self.end - self.start
+		if self.step > 0 {
+			if distance <= 0 -> return 0
+			// round up, so a partial final step is included
+			return (distance + self.step - 1) / self.step
+		}
+		if distance >= 0 -> return 0
+		return (distance + self.step + 1) / self.step
 	}
 	
 	def at_raw(self, i: Int) ->
