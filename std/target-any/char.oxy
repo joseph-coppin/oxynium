@@ -1,11 +1,83 @@
 primitive Char {
-	def from_int (i: Int) Char ->
-		#unchecked_cast(Char, i),
+	/// creates the character with Unicode code point `i`
+	def from_int (i: Int) Char {
+		// a Char stores its UTF-8 bytes, first byte in the lowest byte
+		return #asm Char "
+			mov rcx, qword [rbp + 16] ; rcx = code point
+
+			cmp rcx, 0x80
+			jb ._$_from_int_1_byte
+			cmp rcx, 0x800
+			jb ._$_from_int_2_bytes
+			cmp rcx, 0x10000
+			jb ._$_from_int_3_bytes
+
+			; 11110xxx 10xxxxxx 10xxxxxx 10xxxxxx
+			mov rax, rcx
+			and rax, 0x3F
+			or rax, 0x80
+			shl rax, 8
+			mov rdx, rcx
+			shr rdx, 6
+			and rdx, 0x3F
+			or rdx, 0x80
+			or rax, rdx
+			shl rax, 8
+			mov rdx, rcx
+			shr rdx, 12
+			and rdx, 0x3F
+			or rdx, 0x80
+			or rax, rdx
+			shl rax, 8
+			mov rdx, rcx
+			shr rdx, 18
+			or rdx, 0xF0
+			or rax, rdx
+			jmp ._$_from_int_end
+
+			; 1110xxxx 10xxxxxx 10xxxxxx
+			._$_from_int_3_bytes:
+			mov rax, rcx
+			and rax, 0x3F
+			or rax, 0x80
+			shl rax, 8
+			mov rdx, rcx
+			shr rdx, 6
+			and rdx, 0x3F
+			or rdx, 0x80
+			or rax, rdx
+			shl rax, 8
+			mov rdx, rcx
+			shr rdx, 12
+			or rdx, 0xE0
+			or rax, rdx
+			jmp ._$_from_int_end
+
+			; 110xxxxx 10xxxxxx
+			._$_from_int_2_bytes:
+			mov rax, rcx
+			and rax, 0x3F
+			or rax, 0x80
+			shl rax, 8
+			mov rdx, rcx
+			shr rdx, 6
+			or rdx, 0xC0
+			or rax, rdx
+			jmp ._$_from_int_end
+
+			._$_from_int_1_byte:
+			mov rax, rcx
+
+			._$_from_int_end:
+			push rax
+		"
+	}
 	
 	def == (self, other: Char) Bool {
 		return #asm Bool "
-			mov rax, qword [rbp + 16]
-			cmp rax, qword [rbp + 24]
+			mov rcx, qword [rbp + 16]
+			xor rax, rax
+			cmp rcx, qword [rbp + 24]
 			sete al
 			push rax
 		"
@@ -26,8 +98,54 @@ primitive Char {
 		"
 	}
 	
-	def Int (self) Int ->
-		#unchecked_cast(Int, self),
+	/// the Unicode code point of this character
+	def Int (self) Int {
+		return #asm Int "
+			mov rdx, qword [rbp + 16] ; rdx = UTF-8 bytes, first byte lowest
+			movzx rax, dl             ; rax = first byte
+
+			; a single byte, or not a valid leading byte
+			cmp rax, 0xC0
+			jb ._$_int_1_byte
+			cmp rax, 0xE0
+			jb ._$_int_2_bytes
+			cmp rax, 0xF0
+			jb ._$_int_3_bytes
+
+			; 11110xxx 10xxxxxx 10xxxxxx 10xxxxxx
+			and rax, 0x07
+			mov rcx, 3
+			jmp ._$_int_continuation_bytes
+
+			; 1110xxxx 10xxxxxx 10xxxxxx
+			._$_int_3_bytes:
+			and rax, 0x0F
+			mov rcx, 2
+			jmp ._$_int_continuation_bytes
+
+			; 110xxxxx 10xxxxxx
+			._$_int_2_bytes:
+			and rax, 0x1F
+			mov rcx, 1
+
+			; add 6 bits from each of the next rcx bytes
+			._$_int_continuation_bytes:
+				shr rdx, 8
+				shl rax, 6
+				mov r8, rdx
+				and r8, 0x3F
+				or rax, r8
+				dec rcx
+				jnz ._$_int_continuation_bytes
+			jmp ._$_int_end
+
+			._$_int_1_byte:
+			mov rax, rdx
+
+			._$_int_end:
+			push rax
+		"
+	}
 
 	def is_digit (self) Bool ->
 		#unchecked_cast(Int, self) >= #unchecked_cast(Int, '0') &&
