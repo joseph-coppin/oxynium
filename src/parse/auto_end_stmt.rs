@@ -8,8 +8,13 @@ fn should_insert_between(tok1: &Token, tok2: &Token) -> bool {
         | TokenType::Int
         | TokenType::CloseParen
         | TokenType::QM
-        | TokenType::String => match tok2.token_type {
-            TokenType::String | TokenType::Int | TokenType::Hash => true,
+        | TokenType::String
+        | TokenType::CharLiteral => match tok2.token_type {
+            TokenType::String
+            | TokenType::Int
+            | TokenType::CharLiteral
+            | TokenType::Not
+            | TokenType::Hash => true,
             TokenType::Identifier => {
                 !NEVER_BEFORE_KEYWORDS.contains(&tok2.literal.as_ref().unwrap().as_str())
             }
