@@ -96,7 +96,11 @@ impl AstNode for ForLoopNode {
         // self.value becomes a child of self.local_var_assignment_node
         // so it type checked with that
 
-        let mut statements_tr = self.statements.borrow_mut().type_check(ctx.clone())?;
+        // `break`s inside belong to this loop, not any loop around it
+        ctx.borrow_mut().loop_breaks_push();
+        let statements_tr = self.statements.borrow_mut().type_check(ctx.clone());
+        ctx.borrow_mut().loop_breaks_pop();
+        let mut statements_tr = statements_tr?;
         statements_tr.unknowns += unknowns;
         Ok(statements_tr)
     }

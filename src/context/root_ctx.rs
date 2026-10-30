@@ -14,6 +14,8 @@ pub struct RootContext {
     self_: Option<MutRc<dyn Context>>,
     // Vec<(start of loop label, end of loop label)>
     loop_label_stack: Vec<LoopLabels>,
+    // whether each loop currently being type checked contains a `break`
+    loop_breaks_stack: Vec<bool>,
     call_stack: Vec<CallStackFrame>,
     anon_symbol_count: u64,
     // do not allow any more declarations
@@ -30,6 +32,7 @@ impl RootContext {
         let self_ = mut_rc(Self {
             self_: None,
             loop_label_stack: vec![],
+            loop_breaks_stack: vec![],
             call_stack: vec![],
             anon_symbol_count: 0,
             frozen: false,
@@ -55,6 +58,7 @@ impl Context for RootContext {
         self.err_on_unknowns = false;
         self.set_ignoring_definitions(false);
         self.loop_label_stack.clear();
+        self.loop_breaks_stack.clear();
         self.call_stack.clear();
     }
 
@@ -166,6 +170,20 @@ impl Context for RootContext {
 
     fn loop_label_peak(&self) -> Option<LoopLabels> {
         self.loop_label_stack.last().cloned()
+    }
+
+    fn loop_breaks_push(&mut self) {
+        self.loop_breaks_stack.push(false);
+    }
+
+    fn loop_breaks_pop(&mut self) -> bool {
+        self.loop_breaks_stack.pop().unwrap_or(false)
+    }
+
+    fn loop_breaks_mark(&mut self) {
+        if let Some(breaks) = self.loop_breaks_stack.last_mut() {
+            *breaks = true;
+        }
     }
 
     fn stack_frame_push(&mut self, frame: CallStackFrame) {
