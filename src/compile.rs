@@ -197,16 +197,13 @@ fn assemble(
     let ls_out = Command::new("gcc")
         .arg("-Wall")
         .arg("-g")
-        .arg(match args.target {
-            Target::MACOS => "",
-            Target::X86_64Linux => "-no-pie",
+        .args(match args.target {
+            // output is always x86-64, so link it as such on Apple Silicon too
+            // (programs then run through Rosetta 2)
+            Target::MACOS => vec!["-arch", "x86_64"],
+            Target::X86_64Linux => vec!["-no-pie", "-e", "main"],
         })
         .arg(o_out_file.clone().as_str())
-        .arg("-e")
-        .arg(match args.target {
-            Target::MACOS => "start",
-            Target::X86_64Linux => "main",
-        })
         .arg("-o")
         .arg(args.out.clone().as_str())
         .output()

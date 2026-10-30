@@ -3,6 +3,7 @@
 # Oxynium Compiler in Rust
 
 Linux/MacOS x86-64 support only so far.
+On Apple Silicon Macs, compiled programs run through Rosetta 2.
 
 ## Requirements
 
