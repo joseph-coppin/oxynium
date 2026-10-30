@@ -70,6 +70,13 @@ expect '' '
     }
 '
 expect_err 'TypeError' '
+    class C;
+    def main () {
+        let c = new C;
+        for i in c {}
+    }
+'
+expect_err 'TypeError' '
     def main () {
         for i in 1 {}
     }
